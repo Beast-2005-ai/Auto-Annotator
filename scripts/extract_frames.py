@@ -20,8 +20,7 @@ def extract_frames(video_path, output_dir, frame_interval=10):
         print(f"Error: Could not open video file {video_path}")
         return
     
-    total_frames = int(cap.get(cv2.getBuildInformation().find("FRAME_COUNT") if cap.get(7) == 0 else cap.get(7)))
-    # Fallback if frame count detection fails
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     if total_frames <= 0:
         total_frames = None
 
@@ -57,7 +56,7 @@ def extract_frames(video_path, output_dir, frame_interval=10):
 
 if __name__ == "__main__":
     # Example paths - update these based on your filenames
-    VIDEO_FILE = "data/raw_videos/bottle_video.mp4"
+    VIDEO_FILE = "data/raw_videos/bottleandperson.mp4"
     OUTPUT_FOLDER = "data/extracted_frames/"
     
     # Extract 1 frame every 10 frames (ideal balance for a panning phone video)

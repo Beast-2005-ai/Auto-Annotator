@@ -1,9 +1,16 @@
-# Core Utilities
+# --- Core Image & Math Utilities ---
 opencv-python
 numpy
+Pillow
 tqdm
 
-# Deep Learning (CUDA-enabled)
---index-url https://download.pytorch.org/whl/cu121
+# --- Foundation Models (Teacher) ---
+transformers
+
+# --- Fine-Tuning & Inference (Student) ---
+ultralytics
+
+# --- Deep Learning Backend (CUDA 12.1 Enabled) ---
+--extra-index-url https://download.pytorch.org/whl/cu121
 torch
 torchvision

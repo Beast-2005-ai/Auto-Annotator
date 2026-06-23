@@ -1,12 +1,30 @@
-# Environments
+# Python virtual environment
 venv/
-.env
-
-# Data and Artifacts (Keep raw binaries off Git)
-data/
-
-# Python caching
+.venv/
 __pycache__/
 *.pyc
-.pytest_cache/
+
+# Local Data Directories (Keep code clean, ignore large media/datasets)
+data/extracted_frames/
+data/labels/
+data/visual_proof/
+data/dataset/
+
+# Ignore raw video uploads (only keep the directory structure if tracked)
+data/raw_videos/*
+!data/raw_videos/.gitkeep
+
+# PyTorch/YOLO Weights and Runs
+runs/
+*.pt
+*.onnx
+
+# Configuration overrides
+dataset.yaml
+
+# IDE / OS files
+.vscode/
+.idea/
 .DS_Store
+Thm.db
+Desktop.ini
