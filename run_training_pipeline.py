@@ -1,53 +1,46 @@
 import os
-import shutil
 import subprocess
 
-def clean_workspace():
-    """Wipes generated data folders but protects raw_videos."""
-    print("[*] Cleaning workspace...")
-    directories_to_reset = [
-        "data/extracted_frames",
-        "data/labels",
-        "data/visual_proof",
-        "data/dataset"
-    ]
-    
-    for directory in directories_to_reset:
-        if os.path.exists(directory):
-            shutil.rmtree(directory)
-        os.makedirs(directory, exist_ok=True)
-        print(f"    -> Reset: {directory}")
+def update_status(workspace, message):
+    """Writes the current stage to a text file for the API to read."""
+    status_path = os.path.join(workspace, "status.txt")
+    with open(status_path, "w") as f:
+        f.write(message)
 
 def run_script(script_path):
-    """Executes a python script and halts if it fails."""
-    print(f"\n========================================")
-    print(f"[*] EXECUTING: {script_path}")
-    print(f"========================================\n")
-    
+    print(f"\n[*] EXECUTING: {script_path}")
     result = subprocess.run(["python", script_path])
-    
     if result.returncode != 0:
-        print(f"\n[!] ERROR: {script_path} failed. Pipeline halted.")
         exit(1)
 
 def main():
-    print("=== STARTING AUTONOMOUS DATA ENGINE ===")
+    workspace = os.environ.get("PIPELINE_WORKSPACE")
+    if not workspace:
+        print("[!] ERROR: PIPELINE_WORKSPACE environment variable not set.")
+        exit(1)
+
+    print(f"=== STARTING AUTONOMOUS DATA ENGINE: {workspace} ===")
     
-    # 1. Prepare Environment
-    clean_workspace()
+    os.makedirs(f"{workspace}/extracted_frames", exist_ok=True)
+    os.makedirs(f"{workspace}/labels", exist_ok=True)
+    os.makedirs(f"{workspace}/visual_proof", exist_ok=True)
+    os.makedirs(f"{workspace}/dataset", exist_ok=True)
     
-    # 2. Execute Pipeline Sequence
+    update_status(workspace, "EXTRACTING FRAMES...")
     run_script("scripts/extract_frames.py")
+    
+    update_status(workspace, "AUTO-ANNOTATING VIA FOUNDATION MODEL...")
     run_script("scripts/auto_annotate_v2.py")
+    
+    update_status(workspace, "PREPARING YOLO DATASET STRUCTURE...")
     run_script("scripts/prepare_dataset.py")
     
-    # 3. Train Model
-    # Note: Ensure train.py has exist_ok=True and a static name like name="multi_class_v1"
+    update_status(workspace, "TRAINING STUDENT MODEL (GPU ACTIVE)...")
     run_script("scripts/train.py")
     
+    # The magical word that tells the React frontend to move to Stage 4
+    update_status(workspace, "COMPLETE")
     print("\n=== PIPELINE COMPLETE! ===")
-    print("Check data/visual_proof/ to see teacher annotations.")
-    print("Weights saved in runs/detect/")
 
 if __name__ == "__main__":
     main()

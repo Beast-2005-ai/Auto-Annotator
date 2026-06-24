@@ -1,59 +1,34 @@
-import os
-import random
-import shutil
-from tqdm import tqdm
+import os, shutil, random, glob
 
 def main():
-    # Source paths
-    IMAGE_SRC = "data/extracted_frames"
-    LABEL_SRC = "data/labels"
-    
-    # Destination paths
-    DEST_ROOT = "data/dataset"
-    TRAIN_IMG_DIR = os.path.join(DEST_ROOT, "train", "images")
-    TRAIN_LBL_DIR = os.path.join(DEST_ROOT, "train", "labels")
-    VAL_IMG_DIR = os.path.join(DEST_ROOT, "val", "images")
-    VAL_LBL_DIR = os.path.join(DEST_ROOT, "val", "labels")
+    workspace = os.environ.get("PIPELINE_WORKSPACE", "data")
+    images_dir = os.path.join(workspace, "extracted_frames")
+    labels_dir = os.path.join(workspace, "labels")
+    dataset_dir = os.path.join(workspace, "dataset")
 
-    # Create directories
-    for folder in [TRAIN_IMG_DIR, TRAIN_LBL_DIR, VAL_IMG_DIR, VAL_LBL_DIR]:
-        os.makedirs(folder, exist_ok=True)
+    for split in ['train', 'val']:
+        os.makedirs(os.path.join(dataset_dir, split, 'images'), exist_ok=True)
+        os.makedirs(os.path.join(dataset_dir, split, 'labels'), exist_ok=True)
 
-    # Get all matching pairs
-    images = [f for f in os.listdir(IMAGE_SRC) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
-    
-    # Shuffle to ensure random distribution across splits
-    random.seed(42)  # Fixed seed for repeatability
+    images = glob.glob(os.path.join(images_dir, "*.jpg"))
     random.shuffle(images)
+    
+    split_idx = int(len(images) * 0.8)
+    train_imgs = images[:split_idx]
+    val_imgs = images[split_idx:]
 
-    # Calculate split index (85% train, 15% val)
-    split_idx = int(len(images) * 0.85)
-    train_images = images[:split_idx]
-    val_images = images[split_idx:]
-
-    print(f"Splitting dataset: {len(train_images)} training images, {len(val_images)} validation images.")
-
-    # Helper function to copy files safely
-    def move_files(file_list, dest_img_dir, dest_lbl_dir):
-        for img_name in file_list:
-            base_name = os.path.splitext(img_name)[0]
-            lbl_name = base_name + ".txt"
-
-            src_img = os.path.join(IMAGE_SRC, img_name)
-            src_lbl = os.path.join(LABEL_SRC, lbl_name)
-
-            # Copy image
-            shutil.copy(src_img, os.path.join(dest_img_dir, img_name))
+    def copy_files(img_paths, split_name):
+        for img_path in img_paths:
+            base_name = os.path.basename(img_path)
+            label_path = os.path.join(labels_dir, base_name.replace(".jpg", ".txt"))
             
-            # Copy label if it exists (handles background frames with no objects safely)
-            if os.path.exists(src_lbl):
-                shutil.copy(src_lbl, os.path.join(dest_lbl_dir, lbl_name))
+            if os.path.exists(label_path):
+                shutil.copy(img_path, os.path.join(dataset_dir, split_name, 'images', base_name))
+                shutil.copy(label_path, os.path.join(dataset_dir, split_name, 'labels', os.path.basename(label_path)))
 
-    # Execute copies
-    move_files(train_images, TRAIN_IMG_DIR, TRAIN_LBL_DIR)
-    move_files(val_images, VAL_IMG_DIR, VAL_LBL_DIR)
-
-    print(f"Dataset successfully created at: {DEST_ROOT}")
+    copy_files(train_imgs, 'train')
+    copy_files(val_imgs, 'val')
+    print("Dataset split complete.")
 
 if __name__ == "__main__":
     main()

@@ -1,16 +1,16 @@
+# --- Web Server (API Bridge) ---
+fastapi
+uvicorn
+python-multipart
+
+# --- Foundation Models & ML ---
+ultralytics
+transformers
+torch
+torchvision
+
 # --- Core Image & Math Utilities ---
 opencv-python
 numpy
 Pillow
 tqdm
-
-# --- Foundation Models (Teacher) ---
-transformers
-
-# --- Fine-Tuning & Inference (Student) ---
-ultralytics
-
-# --- Deep Learning Backend (CUDA 12.1 Enabled) ---
---extra-index-url https://download.pytorch.org/whl/cu121
-torch
-torchvision

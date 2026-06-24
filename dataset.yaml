@@ -1,0 +1,7 @@
+path: data/dataset
+train: train/images
+val: val/images
+
+names:
+  0: bottle
+  1: person
