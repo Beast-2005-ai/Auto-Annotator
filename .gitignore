@@ -21,3 +21,25 @@ runs/
 # OS Generated Files
 .DS_Store
 Thumbs.db
+
+# Python environment and caches
+.vscode/
+.idea/
+*.log
+*.sqlite3
+
+# Node/npm logs and lock files if you don't want package changes
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+frontend/.cache/
+frontend/out/
+frontend/build/
+frontend/.vite/
+
+# Model checkpoints / weights
+data/debug/
+data/**/*.jpg
+data/**/*.json

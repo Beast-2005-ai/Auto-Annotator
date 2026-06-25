@@ -1,10 +1,10 @@
 import React from 'react';
 
 interface LandingPageProps {
-  onStart: () => void;
+  setScreen: (screen: 'landing' | 'wizard' | 'saved' | 'inference') => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ setScreen }) => {
   return (
     <div className="center-wrapper">
       <div className="mb-12 text-center bg-black/60 p-8 rounded-xl border-2 border-pink-500/50 shadow-[0_0_20px_rgba(255,0,127,0.3)]">
@@ -17,10 +17,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
       </div>
 
       <div className="flex flex-col items-center w-full">
-        <button onClick={onStart} className="retro-btn">PLAY</button>
-        <button className="retro-btn opacity-50" disabled>SAVED FILES</button>
-        <button className="retro-btn opacity-50" disabled>OPTIONS</button>
-        <button className="retro-btn opacity-50" disabled>EXIT</button>
+        <button onClick={() => setScreen('wizard')} className="retro-btn">PLAY (TRAIN)</button>
+        <button onClick={() => setScreen('saved')} className="retro-btn">SAVED SESSIONS</button>
+        <button onClick={() => setScreen('inference')} className="retro-btn">INFERENCE</button>
+        <button onClick={() => alert('SYSTEM SHUTDOWN SEQUENCE INITIATED... (Just close the tab!)')} className="retro-btn opacity-80 hover:bg-red-900">EXIT</button>
       </div>
 
       <div className="absolute bottom-8 text-xs text-cyan-300 animate-pulse bg-black/50 px-4 py-2 border border-cyan-500">
