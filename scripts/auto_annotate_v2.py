@@ -32,6 +32,9 @@ def main():
     class_map = generate_yaml(workspace, TARGET_CLASSES)
     dino_prompt = " . ".join(TARGET_CLASSES) + " ." 
     
+    os.makedirs(LABEL_DIR, exist_ok=True)
+    os.makedirs(PROOF_DIR, exist_ok=True)
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model_id = "IDEA-Research/grounding-dino-base"
     processor = AutoProcessor.from_pretrained(model_id)
@@ -39,6 +42,9 @@ def main():
 
     image_files = [f for f in os.listdir(IMAGE_DIR) if f.lower().endswith((".jpg", ".png"))]
     
+    annotated_count = 0
+    total_count = len(image_files)
+
     for img_name in tqdm(image_files, desc="Auto-Annotating"):
         img_path = os.path.join(IMAGE_DIR, img_name)
         pil_image = Image.open(img_path).convert("RGB")
@@ -49,31 +55,37 @@ def main():
         with torch.no_grad(): outputs = model(**inputs)
 
         results = processor.post_process_grounded_object_detection(
-            outputs, inputs.input_ids, threshold=0.35, target_sizes=[pil_image.size[::-1]]
+            outputs, inputs.input_ids, threshold=0.20, target_sizes=[pil_image.size[::-1]]
         )[0]
 
-        with open(os.path.join(LABEL_DIR, os.path.splitext(img_name)[0] + ".txt"), "w") as f:
-            for score, label_str, box in zip(results["scores"], results["text_labels"], results["boxes"]):
-                class_id = -1
-                for idx, target in enumerate(TARGET_CLASSES):
-                    if target.lower() in label_str.lower():
-                        class_id = idx; break
-                if class_id == -1: continue
+        labels = []
+        for score, label_str, box in zip(results["scores"], results["text_labels"], results["boxes"]):
+            class_id = -1
+            for idx, target in enumerate(TARGET_CLASSES):
+                if target.lower() in label_str.lower():
+                    class_id = idx
+                    break
+            if class_id == -1:
+                continue
 
-                xmin, ymin, xmax, ymax = box.tolist()
-                
-                # Write YOLO Text Label
-                f.write(f"{class_id} {max(0, min(1, ((xmin + xmax) / 2) / img_width)):.6f} {max(0, min(1, ((ymin + ymax) / 2) / img_height)):.6f} {max(0, min(1, (xmax - xmin) / img_width)):.6f} {max(0, min(1, (ymax - ymin) / img_height)):.6f}\n")
-                
-                # --- RESTORED: Draw the Green Boxes for the React UI ---
-                conf = score.item()
-                color = (0, 255, 0)
-                cv2.rectangle(cv2_image, (int(xmin), int(ymin)), (int(xmax), int(ymax)), color, 2)
-                cv2.putText(cv2_image, f"{class_map[class_id]} {conf:.2f}", (int(xmin), int(ymin)-10), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            xmin, ymin, xmax, ymax = box.tolist()
+            labels.append((class_id, xmin, ymin, xmax, ymax, float(score)))
 
-        # --- RESTORED: Actually save the image so the React app can download it ---
-        cv2.imwrite(os.path.join(PROOF_DIR, img_name), cv2_image)
+        if labels:
+            annotated_count += 1
+            label_path = os.path.join(LABEL_DIR, os.path.splitext(img_name)[0] + ".txt")
+            with open(label_path, "w") as f:
+                for class_id, xmin, ymin, xmax, ymax, score in labels:
+                    f.write(f"{class_id} {max(0, min(1, ((xmin + xmax) / 2) / img_width)):.6f} {max(0, min(1, ((ymin + ymax) / 2) / img_height)):.6f} {max(0, min(1, (xmax - xmin) / img_width)):.6f} {max(0, min(1, (ymax - ymin) / img_height)):.6f}\n")
+
+                    color = (0, 255, 0)
+                    cv2.rectangle(cv2_image, (int(xmin), int(ymin)), (int(xmax), int(ymax)), color, 2)
+                    cv2.putText(cv2_image, f"{class_map[class_id]} {score:.2f}", (int(xmin), int(ymin)-10), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+            cv2.imwrite(os.path.join(PROOF_DIR, img_name), cv2_image)
+
+    print(f"Auto-annotation complete: {annotated_count}/{total_count} images labeled.")
 
 if __name__ == "__main__":
     main()

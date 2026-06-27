@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface LandingPageProps {
-  setScreen: (screen: 'landing' | 'wizard' | 'saved' | 'inference') => void;
+  setScreen: (screen: 'landing' | 'wizard' | 'saved' | 'inference' | 'logs') => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ setScreen }) => {
@@ -20,7 +20,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setScreen }) => {
         <button onClick={() => setScreen('wizard')} className="retro-btn">PLAY (TRAIN)</button>
         <button onClick={() => setScreen('saved')} className="retro-btn">SAVED SESSIONS</button>
         <button onClick={() => setScreen('inference')} className="retro-btn">INFERENCE</button>
-        <button onClick={() => alert('SYSTEM SHUTDOWN SEQUENCE INITIATED... (Just close the tab!)')} className="retro-btn opacity-80 hover:bg-red-900">EXIT</button>
+        {/* Swapped Exit for Logs */}
+        <button onClick={() => setScreen('logs')} className="retro-btn">SYSTEM LOGS</button>
       </div>
 
       <div className="absolute bottom-8 text-xs text-cyan-300 animate-pulse bg-black/50 px-4 py-2 border border-cyan-500">

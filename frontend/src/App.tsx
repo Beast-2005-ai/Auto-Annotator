@@ -3,10 +3,10 @@ import { LandingPage } from './components/LandingPage';
 import { RecipeBuilder } from './components/RecipeBuilder';
 import { SavedFiles } from './components/SavedFiles';
 import { Inference } from './components/Inference';
+import { LogsTerminal } from './components/LogsTerminal';
 import './index.css';
 
-// Expand the AppScreen types
-type AppScreen = 'landing' | 'wizard' | 'saved' | 'inference';
+type AppScreen = 'landing' | 'wizard' | 'saved' | 'inference' | 'logs';
 
 function App() {
   const [screen, setScreen] = useState<AppScreen>('landing');
@@ -23,6 +23,7 @@ function App() {
       {screen === 'wizard' && <RecipeBuilder onBack={() => setScreen('landing')} />}
       {screen === 'saved' && <SavedFiles onBack={() => setScreen('landing')} />}
       {screen === 'inference' && <Inference onBack={() => setScreen('landing')} />}
+      {screen === 'logs' && <LogsTerminal onBack={() => setScreen('landing')} />}
     </div>
   );
 }
